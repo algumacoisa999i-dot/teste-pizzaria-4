@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pizzaria Turbo PRO</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins,sans-serif;}
+
+body{
+  background:#0f172a;
+  color:white;
+}
+
+/* HEADER */
+header{
+  position:fixed;
+  top:0;
+  width:100%;
+  background:#111827;
+  padding:15px 20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  z-index:1000;
+}
+
+.logo{
+  font-size:22px;
+  font-weight:800;
+  color:#fff;
+}
+
+.cart-btn{
+  background:#f97316;
+  padding:10px 15px;
+  border-radius:30px;
+  cursor:pointer;
+  font-weight:600;
+}
+
+/* BANNER */
+.banner{
+  margin-top:80px;
+  height:220px;
+  background:linear-gradient(rgba(0,0,0,0.6),rgba(0,0,0,0.6)),
+  url('https://images.unsplash.com/photo-1601924582975-7e6a36b7f1b0');
+  background-size:cover;
+  background-position:center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+
+.banner h1{
+  font-size:28px;
+}
+
+/* GRID */
+.container{
+  padding:20px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:20px;
+}
+
+.card{
+  background:#1e293b;
+  border-radius:20px;
+  overflow:hidden;
+  transition:0.3s;
+}
+
+.card:hover{
+  transform:translateY(-8px);
+}
+
+.card img{
+  width:100%;
+  height:140px;
+  object-fit:cover;
+}
+
+.card-content{
+  padding:15px;
+}
+
+.card h3{
+  font-size:16px;
+}
+
+.price{
+  color:#f97316;
+  font-weight:600;
+  margin:5px 0;
+}
+
+button{
+  width:100%;
+  padding:8px;
+  border:none;
+  border-radius:20px;
+  background:#f97316;
+  color:white;
+  font-weight:600;
+  cursor:pointer;
+}
+
+/* CARRINHO */
+.cart{
+  position:fixed;
+  right:-400px;
+  top:0;
+  width:350px;
+  height:100%;
+  background:#111827;
+  padding:20px;
+  transition:0.4s;
+  overflow:auto;
+  z-index:2000;
+}
+
+.cart.active{
+  right:0;
+}
+
+.cart h2{
+  margin-bottom:10px;
+}
+
+.cart-item{
+  display:flex;
+  justify-content:space-between;
+  margin:8px 0;
+}
+
+.qty{
+  display:flex;
+  gap:5px;
+}
+
+.qty button{
+  width:25px;
+  height:25px;
+  padding:0;
+  border-radius:50%;
+}
+
+.total{
+  margin-top:15px;
+  font-size:18px;
+}
+
+.checkout{
+  margin-top:15px;
+  background:#22c55e;
+}
+
+input{
+  width:100%;
+  padding:8px;
+  margin-top:8px;
+  border-radius:10px;
+  border:none;
+}
+
+footer{
+  background:#111827;
+  padding:20px;
+  text-align:center;
+  margin-top:30px;
+}
+</style>
+</head>
+<body>
+
+<header>
+<div class="logo">🍕 Pizzaria Turbo</div>
+<div class="cart-btn" onclick="toggleCart()">🛒 Carrinho</div>
+</header>
+
+<div class="banner">
+<h1>Entrega rápida • Sabor Explosivo</h1>
+</div>
+
+<div class="container" id="menu"></div>
+
+<div class="cart" id="cart">
+<h2>Seu Pedido</h2>
+<div id="cart-items"></div>
+
+<p>Taxa de entrega: R$ <span id="delivery">5.00</span></p>
+<input type="text" id="cupom" placeholder="Cupom de desconto">
+<button onclick="applyCoupon()">Aplicar Cupom</button>
+
+<div class="total">
+Total: R$ <span id="total">0.00</span>
+</div>
+
+<h3>Finalizar</h3>
+<input type="text" id="nome" placeholder="Nome">
+<input type="text" id="telefone" placeholder="Telefone">
+<input type="text" id="endereco" placeholder="Endereço">
+
+<button class="checkout" onclick="finalizar()">Enviar Pedido</button>
+</div>
+
+<footer>
+© 2026 Pizzaria Turbo • Todos os direitos reservados
+</footer>
+
+<script>
+const pizzas = [
+"Calabresa","Quatro Queijos","Portuguesa","Frango Catupiry",
+"Marguerita","Pepperoni","Napolitana","Chocolate",
+"Banana","Brócolis","Lombo","Atum","Veggie",
+"Mexicana","Baiana","Strogonoff","Frango BBQ",
+"Especial","Gourmet","Hot","Cremosa","Branca","Tropical"
+];
+
+let cart = [];
+let delivery = 5;
+let discount = 0;
+
+const menu = document.getElementById("menu");
+
+pizzas.forEach((p,i)=>{
+  menu.innerHTML += `
+  <div class="card">
+    <img src="https://images.unsplash.com/400x300/?pizza,${i}">
+    <div class="card-content">
+      <h3>${p}</h3>
+      <div class="price">R$ ${(45+i).toFixed(2)}</div>
+      <button onclick="add(${i})">Adicionar</button>
+    </div>
+  </div>`;
+});
+
+function toggleCart(){
+  document.getElementById("cart").classList.toggle("active");
+}
+
+function add(i){
+  let price = 45+i;
+  let existing = cart.find(item=>item.id===i);
+  if(existing){
+    existing.qty++;
+  }else{
+    cart.push({id:i,name:pizzas[i],price:price,qty:1});
+  }
+  updateCart();
+}
+
+function updateCart(){
+  let html="";
+  let total=0;
+
+  cart.forEach(item=>{
+    total += item.price * item.qty;
+    html += `
+    <div class="cart-item">
+      <div>${item.name}</div>
+      <div class="qty">
+        <button onclick="change(${item.id},-1)">-</button>
+        ${item.qty}
+        <button onclick="change(${item.id},1)">+</button>
+      </div>
+    </div>`;
+  });
+
+  document.getElementById("cart-items").innerHTML = html;
+  total = total + delivery - discount;
+  document.getElementById("total").innerText = total.toFixed(2);
+}
+
+function change(id,val){
+  let item = cart.find(i=>i.id===id);
+  item.qty += val;
+  if(item.qty<=0){
+    cart = cart.filter(i=>i.id!==id);
+  }
+  updateCart();
+}
+
+function applyCoupon(){
+  let c = document.getElementById("cupom").value;
+  if(c==="PIZZA10"){
+    discount=10;
+    alert("Cupom aplicado!");
+  }
+  updateCart();
+}
+
+function finalizar(){
+  alert("Pedido enviado com sucesso!");
+  cart=[];
+  updateCart();
+}
+</script>
+
+</body>
+</html>
